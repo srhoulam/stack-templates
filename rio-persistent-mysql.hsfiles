@@ -156,7 +156,7 @@ library:
   - aeson
   - monad-logger
   - persistent
-  - persistent-postgresql
+  - persistent-mysql
   - persistent-template
   - yaml
 
@@ -191,10 +191,9 @@ tests:
 {-# LANGUAGE NoImplicitPrelude #-}
 module Application (appMain) where
 
-import           Database.Persist.Class      (count)
-import           Database.Persist.Sql        (Filter,
-                                              SqlBackend, runMigration,
-                                              runSqlPool)
+import           Database.Persist.Class (count)
+import           Database.Persist.Sql   (Filter, SqlBackend, runMigration,
+                                         runSqlPool)
 import           Model
 import           RIO
 import           Types
@@ -228,18 +227,19 @@ import Types
 {-# START_FILE src/Import/Main.hs #-}
 module Import.Main where
 
-import           Control.Monad.Logger          (runStderrLoggingT)
+import           Control.Monad.Logger       (runStderrLoggingT)
 import           Data.Yaml
-import           Database.Persist.Postgresql   (PostgresConf (..),
-                                                createPostgresqlPool)
-import           Database.Persist.Sql          (ConnectionPool)
+import           Database.Persist.MySQL     (MySQLConf (..),
+                                             createMySQLPool)
+import           Database.Persist.Sql       (ConnectionPool)
 import           Import
+
 import qualified Paths_{{name-as-varid}}
 
 createConnPool :: AppSettings -> IO ConnectionPool
 createConnPool settings =
-  let PostgresConf connStr poolSize = asDatabase settings
-  in runStderrLoggingT $ createPostgresqlPool connStr poolSize
+  let MySQLConf connStr poolSize = asDatabase settings
+  in runStderrLoggingT $ createMySQLPool connStr poolSize
 
 loadSettings :: IO AppSettings
 loadSettings =
@@ -281,14 +281,14 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"]
 {-# LANGUAGE NoImplicitPrelude #-}
 module Types where
 
-import           Data.Aeson                  (FromJSON (..), Options (..),
-                                              defaultOptions, genericParseJSON)
-import           Database.Persist.Postgresql (PostgresConf (..))
-import           Database.Persist.Sql        (ConnectionPool)
+import           Data.Aeson             (FromJSON (..), Options (..),
+                                         defaultOptions, genericParseJSON)
+import           Database.Persist.MySQL (MySQLConf (..))
+import           Database.Persist.Sql   (ConnectionPool)
 import           GHC.Generics
 import           RIO
 import           RIO.Process
-import           Util.String                 (decapitalize)
+import           Util.String            (decapitalize)
 
 -- | Command line arguments
 data CmdLineOptions = CmdLineOptions
@@ -305,7 +305,7 @@ data App = App
   }
 
 data AppSettings = AppSettings
-  { asDatabase :: !PostgresConf
+  { asDatabase :: !MySQLConf
   } deriving Generic
 
 -- NOTE: you may want to hand-write this JSON parser to set default values
