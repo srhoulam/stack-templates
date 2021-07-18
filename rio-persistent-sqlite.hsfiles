@@ -271,6 +271,21 @@ import           RIO.Text                    (Text)
 share [mkPersist sqlSettings, mkMigrate "migrateAll"]
     $(persistFileWith lowerCaseSettings "config/models.persistmodels")
 
+{-# START_FILE src/Settings.hs #-}
+{-# LANGUAGE TemplateHaskell #-}
+module Settings where
+
+import Data.ByteString
+import Data.FileEmbed
+import Data.Yaml
+import Types
+
+loadSettings :: IO AppSettings
+loadSettings = decodeThrow embeddedSettings
+
+embeddedSettings :: ByteString
+embeddedSettings = $(embedFile "config/settings.yaml")
+
 {-# START_FILE src/Types.hs #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE NoImplicitPrelude #-}
